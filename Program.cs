@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using System.Timers;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
-using JobAdScraper.Models;
 using Microsoft.VisualBasic;
 using ScrapySharp.Extensions;
 using ScrapySharp.Network;
@@ -17,58 +16,31 @@ namespace JobAdScraper
 {
     class Program
     {
+        private static System.Timers.Timer _Timer;
         static async Task Main(string[] args)
         {
-            //var httpClient = new HttpClient();
-            //var httpResponsePost = await httpClient.GetAsync("https://jsonplaceholder.typicode.com/posts");
-            //var httpResponseUser = await httpClient.GetAsync("https://jsonplaceholder.typicode.com/users");
-
-            //if (httpResponsePost.IsSuccessStatusCode)
-            //{
-            //    var contentString = await httpResponsePost.Content.ReadAsStringAsync();
-            //    var posts = JsonConvert.DeserializeObject<List<Post>>(contentString);
-
-            //    var filteredPosts = posts.Where(post => post.Id <= 50);
-
-            //    foreach (var post in filteredPosts)
-            //    {
-            //        Console.WriteLine($"Post: id {post.Id}, name {post.Title}.");
-            //    }
-
-            //    Console.WriteLine();
-            //    posts.ForEach(post => Console.WriteLine($"Post: id {post.Id}, name {post.Title}."));
-            //}
-
-            //if (httpResponseUser.IsSuccessStatusCode)
-            //{
-            //    var contentString = await httpResponseUser.Content.ReadAsStringAsync();
-            //    var users = JsonConvert.DeserializeObject<List<User>>(contentString);
-
-            //    var filteredUsers = users.Where(user => user.Id <= 50);
-
-            //    foreach (var user in filteredUsers)
-            //    {
-            //        Console.WriteLine($"User: id {user.Id}, name {user.Username}.");
-            //    }
-
-            //    Console.WriteLine();
-            //    users.ForEach(user => Console.WriteLine($"User: id {user.Id}, name {user.Username}, e-mail {user.Email}."));
-            //    Console.WriteLine();
-            //    var SamanthaUser = users.Where(user => user.Username == "Samantha").Select(user => user.Username).FirstOrDefault();
-            //    Console.WriteLine(SamanthaUser);
-            //}
-
-            Console.WriteLine();
             //var scrapingInterval = new System.Timers.Timer();
             //scrapingInterval.Elapsed += new ElapsedEventHandler(WebScrape()
             //)
-            WebScrape();
-
+            SetTimer();
         }
-        public static void WebScrape()
+        private static void SetTimer()
+        {
+            _Timer = new System.Timers.Timer(3000);
+            _Timer.Elapsed += new ElapsedEventHandler(WebScrape);
+            _Timer.AutoReset = true;
+            _Timer.Enabled = true;
+        }
+        //private static void OnTimedEvent(Object source, ElapsedEventArgs e)
+        //{
+        //    Console.WriteLine(e.SignalTime);
+
+        //}
+        public static void WebScrape(object source, ElapsedEventArgs e)
         {
             //ScrapingBrowser browser = new ScrapingBrowser();
-            
+            List<string> jobsList = new List<string>();
+
             var scraper = new HtmlWeb();
             for (int i = 0; i <= 300; i += 20)
             {
@@ -80,15 +52,15 @@ namespace JobAdScraper
 
                 var page = scraper.Load($"https://www.cvonline.lt/lt/search?limit=20&offset=" + i + "&categories%5B0%5D=INFORMATION_TECHNOLOGY&towns%5B0%5D=540&isHourlySalary=false&isRemoteWork=true");
                 var nodes = page.DocumentNode.CssSelect(".vacancy-item__title");
-                var jobTitles = nodes.Where(n => n.InnerText.Contains(".NET")).OrderBy(n => n.InnerText).Select(n => n.InnerText);
+                var jobTitles = nodes.Where(n => n.InnerText.Contains(".NET")).OrderBy(n => n.InnerText).Select(n => n.InnerText).ToList();
+
                 foreach (var currentJobTitle in jobTitles)
                 {
-                    Console.WriteLine(currentJobTitle);
+                    jobsList.Add(currentJobTitle);
                 }
             }
-
-
+            //return jobsList;
+            Console.WriteLine(jobsList);
         }
-
     }
 }
