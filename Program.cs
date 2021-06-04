@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using System.Timers;
+using HtmlAgilityPack;
 using Newtonsoft.Json;
 using JobAdScraper.Models;
 using Microsoft.VisualBasic;
@@ -61,24 +62,33 @@ namespace JobAdScraper
             //var scrapingInterval = new System.Timers.Timer();
             //scrapingInterval.Elapsed += new ElapsedEventHandler(WebScrape()
             //)
-          WebScrape();
+            WebScrape();
 
         }
         public static void WebScrape()
         {
-            ScrapingBrowser browser = new ScrapingBrowser();
-            for (int i = 0; i <= 300; i+=20)
+            //ScrapingBrowser browser = new ScrapingBrowser();
+            
+            var scraper = new HtmlWeb();
+            for (int i = 0; i <= 300; i += 20)
             {
-                WebPage homepPage =
-                    browser.NavigateToPage(new Uri($"https://www.cvonline.lt/lt/search?limit=20&offset=" + i + "&categories%5B0%5D=INFORMATION_TECHNOLOGY&towns%5B0%5D=540&isHourlySalary=false&isRemoteWork=true"));
-
-                var html = homepPage.Html;
+                //WebPage homepPage =
+                //    browser.NavigateToPage(new Uri($"https://www.cvonline.lt/lt/search?limit=20&offset=" + i + "&categories%5B0%5D=INFORMATION_TECHNOLOGY&towns%5B0%5D=540&isHourlySalary=false&isRemoteWork=true"));
+                //var html = homepPage.Html;
                 //var nodes = html.CssSelect(".vacancy-item__content a .vacancy-item__title");
-                var nodes = html.CssSelect(".vacancy-item__title");
-                var jobTitles = nodes.Where(n => n.InnerText.Contains(".NET")).Select(n => n.InnerText);
+                //var nodes = html.CssSelect(".vacancy-item__title");
+
+                var page = scraper.Load($"https://www.cvonline.lt/lt/search?limit=20&offset=" + i + "&categories%5B0%5D=INFORMATION_TECHNOLOGY&towns%5B0%5D=540&isHourlySalary=false&isRemoteWork=true");
+                var nodes = page.DocumentNode.CssSelect(".vacancy-item__title");
+                var jobTitles = nodes.Where(n => n.InnerText.Contains(".NET")).OrderBy(n => n.InnerText).Select(n => n.InnerText);
+                foreach (var currentJobTitle in jobTitles)
+                {
+                    Console.WriteLine(currentJobTitle);
+                }
             }
 
-                
+
         }
+
     }
 }
